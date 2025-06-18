@@ -5,7 +5,7 @@ This API manages users, admins, products, gallery, business requests, contact fo
 
 ---
 
-## 🚀 Features
+## Features
 
 - **User & Admin Authentication** (JWT, hashed passwords)
 - **Role-based Authorization** (admin/user separation)
