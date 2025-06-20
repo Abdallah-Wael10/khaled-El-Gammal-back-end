@@ -12,7 +12,8 @@ const createProduct = asyncWrapper(async (req, res) => {
     discountPrice,
     inStock,
     category,
-    stock
+    stock,
+    sizes 
   } = req.body;
 
   if (!req.files || !req.files.mainImage || req.files.mainImage.length === 0) {
@@ -31,7 +32,8 @@ const createProduct = asyncWrapper(async (req, res) => {
     category,
     mainImage,
     images,
-    stock
+    stock,
+    sizes: Array.isArray(sizes) ? sizes : (sizes ? [sizes] : []) 
   });
 
   await product.save();
@@ -63,7 +65,9 @@ const updateProduct = asyncWrapper(async (req, res) => {
     discountPrice,
     inStock,
     category,
-    stock
+    stock,
+    sizes,
+    oldImages // <-- الصور القديمة المتبقية بعد الحذف (من الـ frontend)
   } = req.body;
 
   // Handle mainImage update
@@ -75,16 +79,35 @@ const updateProduct = asyncWrapper(async (req, res) => {
     product.mainImage = req.files.mainImage[0].filename;
   }
 
-  // Handle images array update
+  // Handle images array update (smart merge)
+  let newImages = [];
   if (req.files && req.files.images && req.files.images.length > 0) {
-    // Remove old images
-    product.images.forEach(img => {
+    newImages = req.files.images.map(file => file.filename);
+  }
+
+  // oldImages: array of filenames that should remain (from frontend)
+  let oldImagesArr = [];
+  if (oldImages) {
+    if (Array.isArray(oldImages)) {
+      oldImagesArr = oldImages;
+    } else if (typeof oldImages === "string") {
+      oldImagesArr = [oldImages];
+    }
+  } else {
+    oldImagesArr = product.images || [];
+  }
+
+  // Remove deleted images from disk
+  product.images.forEach(img => {
+    if (!oldImagesArr.includes(img)) {
       try {
         fs.unlinkSync(path.join('uploads', img));
       } catch (e) {}
-    });
-    product.images = req.files.images.map(file => file.filename);
-  }
+    }
+  });
+
+  // Final images = oldImagesArr (remaining) + newImages (added)
+  product.images = [...oldImagesArr, ...newImages];
 
   product.title = title ?? product.title;
   product.description = description ?? product.description;
@@ -93,6 +116,14 @@ const updateProduct = asyncWrapper(async (req, res) => {
   product.inStock = inStock ?? product.inStock;
   product.category = category ?? product.category;
   product.stock = stock ?? product.stock;
+  // Handle sizes as array of strings
+  if (sizes) {
+    if (Array.isArray(sizes)) {
+      product.sizes = sizes;
+    } else if (typeof sizes === "string") {
+      product.sizes = [sizes];
+    }
+  }
 
   await product.save();
   res.json(product);

@@ -8,6 +8,8 @@ exports.createProductValidation = [
   body('inStock').isBoolean().withMessage('inStock must be boolean'),
   body('category').isString().trim().notEmpty().withMessage('Category is required').escape(),
   body('stock').isInt({ min: 0 }).withMessage('Stock must be a positive integer'),
+  body('sizes').optional().isArray().withMessage('Sizes must be an array'),
+  body('sizes.*').optional().isString().withMessage('Each size must be a string'),
 ];
 
 exports.updateProductValidation = [
@@ -18,6 +20,8 @@ exports.updateProductValidation = [
   body('inStock').optional().isBoolean(),
   body('category').optional().isString().trim().escape(),
   body('stock').optional().isInt({ min: 0 }),
+  body('sizes').optional().isArray().withMessage('Sizes must be an array'),
+  body('sizes.*').optional().isString().withMessage('Each size must be a string'),
 ];
 
 exports.idValidation = [

@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("../controllers/user.controller");
 const validate = require("../middleware/validate");
 const verfiyToken = require("../middleware/verfiytoken");
+const isAdmin = require("../middleware/isAdmin");
 const {
   signupValidation,
   loginValidation,
@@ -22,13 +23,13 @@ router.post("/forgot-password", forgotPasswordValidation, validate, userControll
 // Reset Password
 router.post("/reset-password", resetPasswordValidation, validate, userController.resetPassword);
 
-// Get All Users (protected)
-router.get("/", verfiyToken, userController.getAllUsers);
+// Get All Users (protected + admin only)
+router.get("/", verfiyToken, isAdmin, userController.getAllUsers);
 
 // Get User By ID (protected)
-router.get("/:id", verfiyToken, userController.getUserById);
+router.get("/:id", verfiyToken,isAdmin, userController.getUserById);
 
 // Delete User By ID (protected)
-router.delete("/:id", verfiyToken, userController.deleteUser);
+router.delete("/:id", verfiyToken,isAdmin, userController.deleteUser);
 
 module.exports = router;

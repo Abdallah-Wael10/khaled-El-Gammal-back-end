@@ -45,7 +45,8 @@ const login = asyncWrapper(async (req, res) => {
   const match = await bcrypt.compare(password, user.password);
   if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
-  const token = await genrateToken({ id: user._id, email: user.email });
+  // هنا أضفنا role: "admin" في التوكن
+  const token = await genrateToken({ id: user._id, email: user.email, role: "admin" });
   res.json({
     token,
     user: { id: user._id, fullName: user.fullName, email, phone: user.phone },

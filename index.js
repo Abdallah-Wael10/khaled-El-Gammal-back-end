@@ -40,12 +40,15 @@ app.use('/api/users', userRoutes);
 
 const adminRoutes = require('./routes/admin.route');
 app.use('/api/admin', adminRoutes);
+
+const checkoutRoutes = require('./routes/checkout.route');
+app.use('/api/checkout', checkoutRoutes);
 app.get('/', (req, res) => {
     res.send('Hello in Khaled Gammal ');  
 });
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static('uploads')); 
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-}); 
+});   
