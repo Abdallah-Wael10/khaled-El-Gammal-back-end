@@ -1,20 +1,21 @@
 # Khaled El Gammal Back End
 
-Back-end RESTful API for Khaled El Gammal platform, built with **Node.js**, **Express**, and **MongoDB**.  
-This API manages users, admins, products, gallery, business requests, contact forms, and customizations.
+A robust RESTful API for the Khaled El Gammal platform, built with **Express.js** and **MongoDB**.  
+This API powers the e-commerce frontend, handling authentication, products, gallery, orders, business/contact/customize forms, and admin features.
 
 ---
 
-## Features
+## 🚀 Features
 
-- **User & Admin Authentication** (JWT, hashed passwords)
-- **Role-based Authorization** (admin/user separation)
-- **CRUD for Products, Gallery, Business, Contact, Customize**
-- **Image Uploads** (with Multer)
+- **Express.js** REST API
+- **MongoDB** with Mongoose ODM
+- **JWT Authentication** (User & Admin, role-based)
+- **CRUD** for Products, Gallery, Business, Contact, Customize
+- **Image Uploads** (Multer, `/uploads`)
 - **Validation** (express-validator)
-- **Password Reset via Email**
+- **Password Reset via Email** (nodemailer, Gmail)
 - **CORS & Security** (helmet, cors)
-- **Clean Code Structure** (MVC, middleware, utils)
+- **Clean MVC Structure**
 - **Ready for Frontend Integration**
 
 ---
@@ -38,7 +39,7 @@ This API manages users, admins, products, gallery, business requests, contact fo
 
 ## ⚙️ Environment Variables
 
-Create a `.env` file in the root with:
+Create a `.env` file in the root:
 
 ```
 MONGO_URL=your_mongodb_connection_string
@@ -59,41 +60,111 @@ npm install
 npm start
 ```
 
-- The server runs on `http://localhost:5000` by default.
+- The server runs on [http://localhost:5000](http://localhost:5000) by default.
 
 ---
 
 ## 📦 Main Endpoints
 
-### **Auth**
-- `POST /api/users/signup` — User registration
-- `POST /api/users/login` — User login
-- `POST /api/admin/signup` — Admin registration
-- `POST /api/admin/login` — Admin login
+### **Auth (User & Admin)**
+
+| Endpoint                       | Method | Body / Params                | Description                |
+|--------------------------------|--------|------------------------------|----------------------------|
+| `/api/users/signup`            | POST   | fullName, email, phone, password | Register new user      |
+| `/api/users/login`             | POST   | email, password              | User login                 |
+| `/api/users/forgot-password`   | POST   | email                        | Send reset code            |
+| `/api/users/reset-password`    | POST   | email, code, newPassword     | Reset password             |
+| `/api/users/`                  | GET    | (JWT, admin)                 | List all users             |
+| `/api/users/:id`               | GET    | (JWT, admin)                 | Get user by ID             |
+| `/api/users/:id`               | DELETE | (JWT, admin)                 | Delete user by ID          |
+
+| `/api/admin/signup`            | POST   | fullName, email, phone, password | Register new admin      |
+| `/api/admin/login`             | POST   | email, password              | Admin login                |
+| `/api/admin/forgot-password`   | POST   | email                        | Send reset code            |
+| `/api/admin/reset-password`    | POST   | email, code, newPassword     | Reset password             |
+| `/api/admin/`                  | GET    | (JWT)                        | List all admins            |
+| `/api/admin/:id`               | GET    | (JWT)                        | Get admin by ID            |
+| `/api/admin/:id`               | DELETE | (JWT)                        | Delete admin by ID         |
+
+---
 
 ### **Products**
-- `GET /api/products` — List all products
-- `POST /api/products` — Create (admin only, JWT)
-- `PUT /api/products/:id` — Update (admin only, JWT)
-- `DELETE /api/products/:id` — Delete (admin only, JWT)
+
+| Endpoint                       | Method | Body / Params                | Description                |
+|--------------------------------|--------|------------------------------|----------------------------|
+| `/api/products`                | GET    |                              | List all products          |
+| `/api/products/:id`            | GET    |                              | Get product by ID          |
+| `/api/products`                | POST   | (JWT, admin) + FormData      | Create product (with images)|
+| `/api/products/:id`            | PUT    | (JWT, admin) + FormData      | Update product (with images)|
+| `/api/products/:id`            | DELETE | (JWT, admin)                 | Delete product             |
+| `/api/products/:id/images`     | POST   | (JWT, admin) + FormData      | Add image to product       |
+| `/api/products/:id/images/:imageName` | PUT | (JWT, admin) + FormData | Replace specific image     |
+| `/api/products/:id/images/:imageName` | DELETE | (JWT, admin)         | Delete specific image      |
+
+- **Image fields:** `mainImage` (single), `images` (array)
+
+---
 
 ### **Gallery**
-- `GET /api/gallery` — List all gallery items
-- `POST /api/gallery` — Create (admin only, JWT)
-- `PUT /api/gallery/:id` — Update (admin only, JWT)
-- `DELETE /api/gallery/:id` — Delete (admin only, JWT)
 
-### **Business**
-- `POST /api/business` — Submit business request (public)
-- `GET/PUT/DELETE /api/business/...` — (admin only, JWT)
+| Endpoint                       | Method | Body / Params                | Description                |
+|--------------------------------|--------|------------------------------|----------------------------|
+| `/api/gallery`                 | GET    |                              | List all gallery items     |
+| `/api/gallery/:id`             | GET    |                              | Get gallery item by ID     |
+| `/api/gallery`                 | POST   | (JWT, admin) + FormData      | Create gallery item        |
+| `/api/gallery/:id`             | PUT    | (JWT, admin) + FormData      | Update gallery item        |
+| `/api/gallery/:id`             | DELETE | (JWT, admin)                 | Delete gallery item        |
 
-### **Contact**
-- `POST /api/contact` — Submit contact form (public)
-- `GET/PUT/DELETE /api/contact/...` — (admin only, JWT)
+- **Image field:** `image` (single)
 
-### **Customize**
-- `POST /api/customize` — Submit customization with images (public)
-- `GET/PUT/DELETE /api/customize/...` — (admin only, JWT)
+---
+
+### **Business Requests**
+
+| Endpoint                       | Method | Body / Params                | Description                |
+|--------------------------------|--------|------------------------------|----------------------------|
+| `/api/business`                | POST   | name, category, email, phone, comment | Submit business request (public) |
+| `/api/business`                | GET    | (JWT, admin)                 | List all business requests |
+| `/api/business/:id`            | GET    | (JWT, admin)                 | Get business by ID         |
+| `/api/business/:id`            | PUT    | (JWT, admin)                 | Update business            |
+| `/api/business/:id`            | DELETE | (JWT, admin)                 | Delete business            |
+
+---
+
+### **Contact Requests**
+
+| Endpoint                       | Method | Body / Params                | Description                |
+|--------------------------------|--------|------------------------------|----------------------------|
+| `/api/contact`                 | POST   | name, email, phone, comment  | Submit contact form (public)|
+| `/api/contact`                 | GET    | (JWT, admin)                 | List all contacts          |
+| `/api/contact/:id`             | GET    | (JWT, admin)                 | Get contact by ID          |
+| `/api/contact/:id`             | PUT    | (JWT, admin)                 | Update contact             |
+| `/api/contact/:id`             | DELETE | (JWT, admin)                 | Delete contact             |
+
+---
+
+### **Customize Requests**
+
+| Endpoint                       | Method | Body / Params                | Description                |
+|--------------------------------|--------|------------------------------|----------------------------|
+| `/api/customize`               | POST   | name, email, phone, comment, image[] | Submit customize request (public, images) |
+| `/api/customize`               | GET    | (JWT, admin)                 | List all customize requests|
+| `/api/customize/:id`           | GET    | (JWT, admin)                 | Get customize by ID        |
+| `/api/customize/:id`           | PUT    | (JWT, admin) + FormData      | Update customize           |
+| `/api/customize/:id`           | DELETE | (JWT, admin)                 | Delete customize           |
+
+- **Image field:** `image` (array, max 5)
+
+---
+
+### **Checkout (Orders)**
+
+| Endpoint                       | Method | Body / Params                | Description                |
+|--------------------------------|--------|------------------------------|----------------------------|
+| `/api/checkout`                | POST   | userInfo, items[], total     | Place order (public)       |
+| `/api/checkout`                | GET    | (JWT, admin)                 | List all orders            |
+| `/api/checkout/:id`            | GET    | (JWT, admin)                 | Get order by ID            |
+| `/api/checkout/:id/status`     | PUT    | (JWT, admin), status         | Update order status        |
 
 ---
 
@@ -123,6 +194,18 @@ npm start
 
 - Users & admins can reset passwords via email (Gmail SMTP).
 - Requires valid `EMAIL_USER` and `EMAIL_PASS` in `.env`.
+
+---
+
+## 📝 Status Codes
+
+- `200` OK (success)
+- `201` Created (resource created)
+- `400` Bad request (validation, logic error)
+- `401` Unauthorized (no/invalid token)
+- `403` Forbidden (not admin)
+- `404` Not found
+- `422` Validation error
 
 ---
 
