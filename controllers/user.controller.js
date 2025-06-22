@@ -63,7 +63,22 @@ const forgotPassword = asyncWrapper(async (req, res) => {
   user.resetCodeExpire = Date.now() + 15 * 60 * 1000; // 15 min
   await user.save();
 
-  await sendEmail(email, "Your Password Reset Code", `Your code is: ${code}`);
+  await sendEmail(
+    email,
+    "Khaled El Gamal Password Reset",
+    `Hello,
+
+We received a request to reset your account password at Khaled El Gamal.
+
+Your password reset verification code is: ${code}
+
+Please enter this code in the app to complete your password reset. This code is valid for 15 minutes.
+
+If you did not request a password reset, please ignore this email.
+
+Best regards,
+Khaled El Gamal Team`
+  );
   res.json({ message: "Reset code sent to your email" });
 });
 
