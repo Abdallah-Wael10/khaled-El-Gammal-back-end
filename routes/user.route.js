@@ -25,7 +25,7 @@ router.post("/reset-password", resetPasswordValidation, validate, userController
 
 // Get All Users (protected + admin only)
 router.get("/", verfiyToken, isAdmin, userController.getAllUsers);
-
+ 
 // Get User By ID (protected)
 router.get("/:id", verfiyToken,isAdmin, userController.getUserById);
 

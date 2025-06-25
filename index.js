@@ -43,6 +43,9 @@ app.use('/api/admin', adminRoutes);
 
 const checkoutRoutes = require('./routes/checkout.route');
 app.use('/api/checkout', checkoutRoutes);
+
+const shippingRoutes = require('./routes/shipping.route');
+app.use('/api/shipping', shippingRoutes);
 app.get('/', (req, res) => {
     res.send('Hello in Khaled Gammal ');  
 });
