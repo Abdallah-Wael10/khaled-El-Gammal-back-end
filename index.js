@@ -71,7 +71,21 @@ app.use('/api/shipping', shippingRoutes);
 app.get('/', (req, res) => {
     res.send('Hello in Khaled Gammal ');  
 });
-app.use('/uploads', express.static('uploads')); 
+app.use('/uploads', express.static('uploads'));
+
+app.use((err, req, res, next) => {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ message: 'Image must be under 10MB' });
+    }
+    if (err.code === 'LIMIT_UNEXPECTED_FILE' || err.code === 'LIMIT_FILE_COUNT') {
+        return res.status(400).json({ message: err.message || 'Too many files uploaded' });
+    }
+    if (err.message && err.message.includes('Only images are allowed')) {
+        return res.status(400).json({ message: err.message });
+    }
+    console.error(err);
+    res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

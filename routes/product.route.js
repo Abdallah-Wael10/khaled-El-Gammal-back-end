@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
+const fs = require("fs");
+const path = require("path");
 const productController = require("../controllers/product.controller");
 const Product = require("../model/product.model");
 const verfiyToken = require("../middleware/verfiytoken");
 const upload = require("../middleware/upload");
+const asyncWrapper = require("../middleware/asyncwrapper");
 const {
   createProductValidation,
   updateProductValidation,
@@ -11,6 +14,15 @@ const {
 } = require("../middleware/product.validation");
 const validate = require("../middleware/validate");
 const isAdmin = require("../middleware/isAdmin");
+
+const MAX_GALLERY_IMAGES = 10;
+
+const removeUploadedFile = (filename) => {
+  if (!filename) return;
+  try {
+    fs.unlinkSync(path.join("uploads", filename));
+  } catch {}
+};
 
 // Create Product (protected)
 router.post(
@@ -56,14 +68,18 @@ router.post(
   verfiyToken,
   isAdmin,
   upload.single("image"),
-  async (req, res) => {
+  asyncWrapper(async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
     if (!req.file) return res.status(400).json({ message: "No image uploaded" });
+    if (product.images.length >= MAX_GALLERY_IMAGES) {
+      removeUploadedFile(req.file.filename);
+      return res.status(400).json({ message: "Maximum 10 gallery images allowed" });
+    }
     product.images.push(req.file.filename);
     await product.save();
     res.json(product);
-  }
+  })
 );
 
 // Replace a specific image in images array
@@ -72,23 +88,17 @@ router.put(
   verfiyToken,
   isAdmin,
   upload.single("image"),
-  async (req, res) => {
+  asyncWrapper(async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
     const idx = product.images.indexOf(req.params.imageName);
     if (idx === -1) return res.status(404).json({ message: "Image not found" });
-    // Remove old image from disk
-    const fs = require("fs");
-    const path = require("path");
-    try {
-      fs.unlinkSync(path.join("uploads", req.params.imageName));
-    } catch {}
-    // Replace with new image
     if (!req.file) return res.status(400).json({ message: "No image uploaded" });
+    removeUploadedFile(req.params.imageName);
     product.images[idx] = req.file.filename;
     await product.save();
     res.json(product);
-  }
+  })
 );
 
 // Delete a specific image from images array
@@ -96,21 +106,16 @@ router.delete(
   "/:id/images/:imageName",
   verfiyToken,
   isAdmin,
-  async (req, res) => {
+  asyncWrapper(async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
     const idx = product.images.indexOf(req.params.imageName);
     if (idx === -1) return res.status(404).json({ message: "Image not found" });
-    // Remove from disk
-    const fs = require("fs");
-    const path = require("path");
-    try {
-      fs.unlinkSync(path.join("uploads", req.params.imageName));
-    } catch {}
+    removeUploadedFile(req.params.imageName);
     product.images.splice(idx, 1);
     await product.save();
     res.json(product);
-  }
+  })
 );
 
 module.exports = router;
