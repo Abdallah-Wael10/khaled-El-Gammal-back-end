@@ -78,7 +78,7 @@ router.post(
     }
     product.images.push(req.file.filename);
     await product.save();
-    res.json(product);
+    res.json(productController.serializeProduct(product));
   })
 );
 
@@ -97,7 +97,7 @@ router.put(
     removeUploadedFile(req.params.imageName);
     product.images[idx] = req.file.filename;
     await product.save();
-    res.json(product);
+    res.json(productController.serializeProduct(product));
   })
 );
 
@@ -114,7 +114,7 @@ router.delete(
     removeUploadedFile(req.params.imageName);
     product.images.splice(idx, 1);
     await product.save();
-    res.json(product);
+    res.json(productController.serializeProduct(product));
   })
 );
 

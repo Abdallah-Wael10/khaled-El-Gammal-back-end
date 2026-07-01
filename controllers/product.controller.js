@@ -4,6 +4,35 @@ const asyncWrapper = require("../middleware/asyncwrapper");
 const fs = require("fs");
 const path = require("path");
 
+const uploadsDir = path.join(__dirname, "..", "uploads");
+
+function imageExists(filename) {
+  if (!filename) return false;
+  try {
+    return fs.existsSync(path.join(uploadsDir, filename));
+  } catch {
+    return false;
+  }
+}
+
+function serializeProduct(product) {
+  const data = product?.toObject ? product.toObject() : product;
+  if (!data) return data;
+
+  const imageCandidates = [
+    data.mainImage,
+    ...(Array.isArray(data.images) ? data.images : []),
+  ].filter(Boolean);
+  const availableImages = imageCandidates.filter(imageExists);
+
+  return {
+    ...data,
+    displayImage: availableImages[0] || data.mainImage || imageCandidates[0] || "",
+    imageCandidates,
+    availableImages,
+  };
+}
+
 async function assertCategoryExists(categoryName) {
   if (!categoryName) return null;
   const trimmed = String(categoryName).trim();
@@ -54,20 +83,20 @@ const createProduct = asyncWrapper(async (req, res) => {
   });
 
   await product.save();
-  res.status(201).json(product);
+  res.status(201).json(serializeProduct(product));
 });
 
 // Get All Products
 const getAllProducts = asyncWrapper(async (req, res) => {
   const products = await Product.find({}, { __v: false });
-  res.json(products);
+  res.json(products.map(serializeProduct));
 });
 
 // Get Product By ID
 const getProductById = asyncWrapper(async (req, res) => {
   const product = await Product.findById(req.params.id, { __v: false });
   if (!product) return res.status(404).json({ message: "Product not found" });
-  res.json(product);
+  res.json(serializeProduct(product));
 });
 
 // Update Product
@@ -151,7 +180,7 @@ const updateProduct = asyncWrapper(async (req, res) => {
   }
 
   await product.save();
-  res.json(product);
+  res.json(serializeProduct(product));
 });
 
 // Delete Product
@@ -176,5 +205,6 @@ module.exports = {
   getAllProducts,
   getProductById,
   updateProduct,
-  deleteProduct
-}
+  deleteProduct,
+  serializeProduct,
+};
