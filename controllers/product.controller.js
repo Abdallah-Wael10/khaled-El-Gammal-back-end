@@ -1,7 +1,20 @@
 const Product = require("../model/product.model");
+const Category = require("../model/category.model");
 const asyncWrapper = require("../middleware/asyncwrapper");
 const fs = require("fs");
 const path = require("path");
+
+async function assertCategoryExists(categoryName) {
+  if (!categoryName) return null;
+  const trimmed = String(categoryName).trim();
+  const category = await Category.findOne({ name: trimmed });
+  if (!category) {
+    const error = new Error(`Category "${trimmed}" does not exist. Add it in Product Categories first.`);
+    error.status = 400;
+    throw error;
+  }
+  return trimmed;
+}
 
 // Create Product
 const createProduct = asyncWrapper(async (req, res) => {
@@ -16,12 +29,15 @@ const createProduct = asyncWrapper(async (req, res) => {
     sizes 
   } = req.body;
 
+  const validCategory = await assertCategoryExists(category);
+
   if (!req.files || !req.files.mainImage || req.files.mainImage.length === 0) {
     return res.status(400).json({ message: "Main image is required" });
   }
 
   const mainImage = req.files.mainImage[0].filename;
   const images = req.files.images ? req.files.images.map(file => file.filename) : [];
+  const stockCount = Number(stock);
 
   const product = new Product({
     title,
@@ -29,10 +45,11 @@ const createProduct = asyncWrapper(async (req, res) => {
     price,
     discountPrice,
     inStock,
-    category,
+    category: validCategory,
     mainImage,
     images,
-    stock,
+    stock: stockCount,
+    initialStock: stockCount,
     sizes: Array.isArray(sizes) ? sizes : (sizes ? [sizes] : []) 
   });
 
@@ -114,8 +131,16 @@ const updateProduct = asyncWrapper(async (req, res) => {
   product.price = price ?? product.price;
   product.discountPrice = discountPrice ?? product.discountPrice;
   product.inStock = inStock ?? product.inStock;
-  product.category = category ?? product.category;
-  product.stock = stock ?? product.stock;
+  if (category !== undefined && category !== null && category !== "") {
+    product.category = await assertCategoryExists(category);
+  }
+  if (stock !== undefined && stock !== null && stock !== "") {
+    const nextStock = Number(stock);
+    if (nextStock !== product.stock) {
+      product.initialStock = nextStock;
+    }
+    product.stock = nextStock;
+  }
   // Handle sizes as array of strings
   if (sizes) {
     if (Array.isArray(sizes)) {

@@ -23,7 +23,12 @@ const checkoutSchema = new mongoose.Schema({
   ],
   paymentMethod: { type: String, default: "cash-on-delivery" },
   total: { type: Number, required: true },
-  status: { type: String, enum: ["pending", "active"], default: "pending" },
+  status: {
+    type: String,
+    enum: ["pending", "in_progress", "sold", "refunded", "active"],
+    default: "pending"
+  },
+  stockAdjusted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

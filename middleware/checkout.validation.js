@@ -17,5 +17,5 @@ exports.checkoutValidation = [
 ];
 
 exports.statusValidation = [
-  body('status').isIn(['pending', 'active']).withMessage('Status must be pending or active'),
+  body('status').isIn(['pending', 'in_progress', 'sold', 'refunded']).withMessage('Status must be pending, in_progress, sold, or refunded'),
 ];
