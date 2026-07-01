@@ -4,13 +4,15 @@ const app = express();
 app.use(express.json());
 require("dotenv").config();
 const cors = require('cors');
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: [
-      '',
-      'http://localhost:3000'
-    ],
+    origin: allowedOrigins,
     credentials: true
-  }));
+}));
 
 app.use(helmet());
 const mongoose = require('mongoose');
@@ -54,4 +56,4 @@ app.use('/uploads', express.static('uploads'));
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-});    
+});
