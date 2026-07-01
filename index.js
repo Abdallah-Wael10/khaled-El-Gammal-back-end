@@ -4,17 +4,37 @@ const app = express();
 app.use(express.json());
 require("dotenv").config();
 const cors = require('cors');
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+
+const defaultOrigins = [
+    'http://localhost:3000',
+    'https://khaled-el-gammal.vercel.app',
+    'https://khaledelgammal.com',
+    'https://www.khaledelgammal.com',
+];
+
+const allowedOrigins = (process.env.FRONTEND_URL || defaultOrigins.join(','))
     .split(',')
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
 
-app.use(cors({
-    origin: allowedOrigins,
-    credentials: true
-}));
+const corsOptions = {
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+        callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
-app.use(helmet());
+app.use(cors(corsOptions));
+
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 const mongoose = require('mongoose');
 const url = process.env.MONGO_URL;
 
